@@ -40,7 +40,35 @@ which is the common case. (c) uuid-based collateral guard — `getElements` and
 `getLassoElements` do not share uuid values, so identity matching across them is
 unreliable; the guard counts instead.
 
-## 2026-06-15 — Scribble detection by reversal count alone
+## 2026-06-15 — Scribble detection: OR of strong-axis and both-axes reversals (supersedes the entry below)
+
+**Decision:** A stroke is a scribble if **either** its stronger PCA axis reverses
+≥ 13 times **or** both axes reverse ≥ 10 times (plus a loose bbox cap).
+
+**Why:** Field false positives were cursive handwriting (e.g. "scribble" in
+cursive). Cursive oscillates and loops, so it lands close to scribbles on every
+single feature tried — max-axis reversals, oscillation wavelength, and retrace/
+fill density all overlapped with ~zero margin. Two intermediate rules each failed
+on real data:
+- *max-axis ≥ 10* (original) fired on cursive (max 12).
+- *both-axes ≥ 10* (a "2-D scrub" rule) fixed cursive but produced **false
+  negatives** on legitimate one-directional scribbles (weaker axis ~2–6).
+The OR rule is what the labeled data actually separates: cursive sat at max 12 /
+min 9 — the lone corner failing both tests — while every erase-scribble cleared
+one bar or the other (max 13–24, or min 10–22), including 1-D scribbles (high max)
+and a borderline 12/12 scribble (caught by min ≥ 10).
+
+**Rejected:** single-threshold rules (above); wavelength / fill-density (don't
+separate); a confirmation step (kept the gesture-only flow, with undo as the
+backstop).
+
+**Known limitation / future work:** margins are ~1 reversal, so dense/long
+cursive can still occasionally trip it (recoverable via undo). A categorical
+signal — cursive makes self-intersecting **loops** (l, b, e…), scribbles don't —
+is logged in BACKLOG.md as a more robust replacement that could also let the
+thresholds drop.
+
+## 2026-06-15 — Scribble detection by reversal count alone (SUPERSEDED)
 
 **Decision:** Classify a stroke as a scribble by its principal-axis reversal
 count (PCA, both axes, max) ≥ 10; the path-length/diagonal ratio is not used.
