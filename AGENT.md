@@ -117,6 +117,24 @@ For every bug reported by the user, do the following:
 7. Once a step is done, amend PLAN.md to mark the corresponding step as done - then re-read the plan and the next step before moving on. I want you to always get back to the plan as an "anchor" to avoid that you deviate.
 8. After each step that stands on its own (compiles, doesn't break the build), suggest a git commit for that step before moving to the next one. I tend to forget to commit, so be proactive about offering it.
 
+# Workflow for release
+
+When I ask for a release, run these review passes first. Each is a deliberate,
+separate pass — do them one at a time, don't fold them together:
+
+1. **Changelog review.** Go through `CHANGES.md` and make sure the entries are
+   consistent, readable, and not redundant — this is what the release notes are
+   built from.
+2. **Comment cleanup.** Review the code's comments and remove any that don't earn
+   their place: a comment should explain something non-trivial, not narrate what
+   the code plainly says.
+3. **Coherence review.** Read the code as a whole and check it reads as one
+   coherent design, not a pile of bolted-on patches.
+4. **Robustness review.** Much of the SN plugin API is beta and can fail
+   mid-execution. Review the operation sequences to minimize data loss when a
+   call fails partway — order mutations so an interruption leaves the note in the
+   least-damaged state.
+
 # Steps independent of workflow
 
 Once I confirm that a feature or bugfix is done:
