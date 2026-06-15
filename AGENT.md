@@ -12,6 +12,25 @@
 * Do all steps above separately so that you can always focus on one task and one task only.
 * If, during a feature development, or after a fix attempt, it turns out the feature is not working as expected, switch automatically to the workflow for bugfixing. I tend to just move on and forget to do the basics.
 
+# Build and on-device deploy
+
+* After any code edit the user will want to test, run `./buildPlugin.sh`
+  yourself - don't ask the user to rebuild. The script bundles the JS,
+  packages the `.snplg`, and (if a device is connected) `adb push`es it to
+  the Supernote.
+* **Pushing the `.snplg` does not load it.** After every push, tell the user
+  to manually install it on-device: Settings -> "Plugins" -> "Install plugin"
+  -> pick the pushed file -> Install. That's the only step that re-extracts
+  the new bundle. `adb shell am force-stop com.ratta.supernote.pluginhost`
+  just reloads the stale extracted bundle - if "the fix didn't work" but the
+  trace looks identical to before, suspect a missed install first. To verify
+  which build is actually live, log a `build=<tag>` stamp (bump it per build)
+  and grep logcat for it.
+* Don't routinely force-stop or restart the Supernote note app
+  (`com.ratta.supernote.note`) after a deploy as a default step - only do it
+  when a diagnostic specifically needs a clean cache/baseline, or the user
+  asks for it.
+
 # Backlog
 
 The backlog lives in `BACKLOG.md` (project root). Read it when picking up
