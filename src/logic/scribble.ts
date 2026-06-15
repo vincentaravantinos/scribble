@@ -27,8 +27,9 @@ export async function onScribblePenUp(elements: any[]): Promise<void> {
       const cls = classifyScribble(pts);
       const tag = typeof el?.uuid === 'string' ? el.uuid.slice(0, 8) : '????????';
       dlog(
-        `${LOG} STROKE ${tag} build=${BUILD_TAG} reversals=${cls.reversals} ` +
-          `diag=${cls.diagonal.toFixed(0)} -> ${cls.isScribble ? 'SCRIBBLE' : 'normal'}`,
+        `${LOG} STROKE ${tag} build=${BUILD_TAG} maj=${cls.major} min=${cls.minor} ` +
+          `reversals=${cls.reversals} diag=${cls.diagonal.toFixed(0)} ` +
+          `-> ${cls.isScribble ? 'SCRIBBLE' : 'normal'}`,
       );
       if (!cls.isScribble) continue;
 

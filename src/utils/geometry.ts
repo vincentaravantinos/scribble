@@ -124,12 +124,12 @@ export function countReversals(seq: number[], deadbandFrac: number): number {
 }
 
 /**
- * Reversal count along the stroke's principal axes (PCA, both axes, max). A
- * scribble drifts along one axis and oscillates along the perpendicular one, so
- * the zigzag may show up on either axis.
+ * Reversal counts along the stroke's two principal axes (PCA). A scribble drifts
+ * along one axis and oscillates along the perpendicular one, so the zigzag may
+ * show up on either axis.
  */
-export function reversalCount(pts: Pt[], deadbandFrac: number): number {
-  if (pts.length < 3) return 0;
+export function reversalCountsByAxis(pts: Pt[], deadbandFrac: number): { major: number; minor: number } {
+  if (pts.length < 3) return { major: 0, minor: 0 };
   let sx = 0, sy = 0;
   for (const p of pts) {
     sx += p.x;
@@ -147,7 +147,7 @@ export function reversalCount(pts: Pt[], deadbandFrac: number): number {
   const ct = Math.cos(theta), st = Math.sin(theta);
   const major = pts.map(p => (p.x - mx) * ct + (p.y - my) * st);
   const minor = pts.map(p => -(p.x - mx) * st + (p.y - my) * ct);
-  return Math.max(countReversals(major, deadbandFrac), countReversals(minor, deadbandFrac));
+  return { major: countReversals(major, deadbandFrac), minor: countReversals(minor, deadbandFrac) };
 }
 
 function orient(a: Pt, b: Pt, c: Pt): number {

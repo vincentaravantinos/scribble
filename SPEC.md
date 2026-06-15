@@ -7,9 +7,9 @@ for *what* the plugin does, not *how* it does it.
 ## Overview
 
 Scribble lets a Supernote user erase handwriting the way they would on paper:
-draw a scribble (a tight back-and-forth zigzag) over the strokes they want
-gone, and those strokes — plus the scribble itself — disappear. No lasso, no
-button: it reacts to the drawing gesture itself.
+scribble back and forth over the strokes they want gone, and those strokes —
+plus the scribble itself — disappear. No lasso, no button: it reacts to the
+drawing gesture itself.
 
 ## Core operation
 
@@ -31,21 +31,26 @@ button: it reacts to the drawing gesture itself.
   strokes. It is always recoverable via Undo. See "Limits and edge cases".
 
 ### Scribble detection
-A stroke counts as a "scribble" if it oscillates back and forth many times — the
-defining trait of a zigzag/cross-hatch. Concretely (calibrated against a labeled
-corpus):
-- Project the stroke's points onto each of its two principal axes (PCA) and
-  count direction reversals along each, ignoring sub-deadband wiggles; take the
-  larger of the two counts. A stroke is a scribble when that count meets a
-  threshold (currently **≥ 10**).
-- The path-length / bounding-box-diagonal **ratio is deliberately NOT used**: in
-  the corpus it failed to separate (dense cursive reached 3.3 while real
-  scribbles dropped to 1.3). Reversal count is the sole discriminator.
+A stroke counts as a "scribble" if it oscillates back and forth markedly more
+than handwriting does. Concretely (calibrated against a labeled corpus): project
+the stroke's points onto each of its two principal axes (PCA) and count direction
+reversals along each (ignoring sub-deadband wiggles). It's a scribble if **either**:
+- the **stronger** axis reverses many times (≥ 13) — a vigorous scribble, even a
+  one-directional one; **or**
+- **both** axes reverse a fair amount (≥ 10) — an area-filling scrub.
 
-The reversal margin between normal writing and scribbles is real but not huge
-(normal handwriting in the corpus topped out at 8). The threshold is the knob to
-revisit if false positives appear; because the erase is undoable, a rare false
-positive is recoverable.
+**Why this OR, not a single threshold:** cursive handwriting oscillates too (it's
+a zigzag that advances, with loops), so it lands close to scribbles on any single
+axis. In the corpus a full cursive phrase reached stronger-axis 12 / weaker-axis
+9, sitting in the one corner that fails *both* tests, while every erase-scribble
+cleared one or the other (stronger-axis 13–24, or weaker-axis 10–22). Path-length
+ratio and retrace-density were evaluated and do **not** separate the two; they are
+not used.
+
+The margins are thin (cursive is ~1 below each bar), so an unusually dense or long
+cursive word can still occasionally be misread as a scribble — recoverable via
+Undo. (A more categorical signal — cursive makes loops, scribbles don't — is a
+known future improvement; see BACKLOG.md.)
 
 Single continuous stroke only (one pen-down-to-up). Classification is cheap and
 computed from the stroke's own points (two bridge calls to read them) — no SDK
