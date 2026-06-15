@@ -1,6 +1,6 @@
 # Changes
 
-## v0.1.0 — 2026-06-15
+## v1.0.0 — 2026-06-15
 
 - **Erase-by-scribble.** Draw a tight back-and-forth scribble over handwriting
   and the crossed strokes — plus the scribble itself — are deleted. No button, no
@@ -9,3 +9,8 @@
   than mass-deleting) if it would take in far more than the strokes crossed.
   Detection is by reversal count (a stroke that oscillates ≥10 times), computed
   from the stroke's own points — normal handwriting doesn't trigger it.
+- **User manual** in the README, with a demo GIF.
+
+## v0.1.0 — 2026-06-15
+
+- Initial cut of erase-by-scribble (superseded by 1.0.0).
