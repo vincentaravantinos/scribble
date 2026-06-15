@@ -1,0 +1,1 @@
+Read `AGENT.md` at the start of every task and follow the workflows it defines (features, bug fixing, implementation) strictly. Treat `SPEC.md` as the source of truth for plugin behavior, as `AGENT.md` requires.
