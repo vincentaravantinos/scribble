@@ -1,9 +1,8 @@
 import { LOG } from '../constants';
 
-// Single-flight guard shared by the button handler (collapse / expand /
-// recollapse) and the motion-driven live redraw. Both mutate the note via
-// insert/delete/reloadFile; running two sequences concurrently interleaves their
-// writes and corrupts the note. Whoever holds the guard runs; others back off.
+// Single-flight guard for the erase operation. Rapid PEN_UP scribbles could
+// otherwise run two erases concurrently, interleaving lasso state and deletes
+// and corrupting the note. Whoever holds the guard runs; others back off.
 //
 // Self-healing: a crash mid-operation never runs the `finally` that releases the
 // guard, and handleMainAction's setTimeout watchdog doesn't fire while the host

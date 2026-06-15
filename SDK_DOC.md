@@ -318,3 +318,77 @@ Practical consequences:
   background thread.
 - **`getCacheElement` (PluginCommAPI)** exists but is undocumented; likely a
   cache-backed element read. Semantics unconfirmed — avoid until documented.
+
+---
+
+## Undo is recorded only for lasso / interactive-pipeline edits
+
+The host's undo stack records edits made through the **lasso / interactive
+pipeline** — `lassoElements(rect)` → `deleteLassoElements()`, `insertGeometry()`,
+etc. The device Undo reverses these.
+
+Edits made through the **file-level `PluginFileAPI`** — `deleteElements`,
+`insertElements`, `replaceElements`, `modifyElements` — are **not** recorded and
+cannot be undone from the device.
+
+To make a plugin's edit reversible by the user, route it through the lasso
+pipeline. There is no plugin-facing undo API; this is the only lever. (A delete
+of arbitrary elements becomes undoable by selecting them with `lassoElements`
+and calling `deleteLassoElements`, rather than `deleteElements`.)
+
+---
+
+## `lassoElements(rect)`: coordinate space and selection semantics
+
+`lassoElements({left, top, right, bottom})` opens a programmatic lasso over a
+rectangle.
+
+- **Coordinates are integer Android/screen pixels.** Non-integer values fail with
+  **error 107** ("lassoElements.left must be an integer"). Stroke points are in
+  EMR space, so convert and round outward to integers. The conversion **swaps and
+  flips axes** (a rotation, not just a scale), so convert the bbox corners and
+  rebuild left/top/right/bottom from their min/max — do not feed EMR coordinates
+  directly.
+- **Do not trust `PointUtils.emrPoint2Android` blindly for the scale.** It derives
+  the EMR maximum from `pageSize` via a hard-coded per-model table, which can be
+  **wrong** when a device's real EMR range differs from the reported `pageSize`
+  (e.g. `pageSize` 1404×1872 but the page's actual EMR max is ~20967×15725). The
+  result is a rect scaled ~0.75× and shifted off the target, selecting nothing.
+  An element's own `maxX`/`maxY` fields carry the page's **true** EMR max — scale
+  by those instead: `mtX = maxX/(pageSize.height-1)`, `mtY = maxY/(pageSize.width-1)`,
+  then `screen = { x: pageSize.width-1 - emr.y/mtY, y: emr.x/mtX }`.
+- **Selection is "fully inside" only.** A stroke is selected only if it lies
+  entirely within the rectangle; a stroke that merely overlaps the rect edge is
+  not selected. To erase strokes a small mark crosses, lasso the **union
+  bounding box** of those strokes (which then also catches any unrelated stroke
+  fully inside that box).
+- **Just-drawn strokes are selectable** — a lasso (e.g. full-page) selects
+  strokes the user drew moments earlier, without a save first. Confirm a
+  selection actually landed with `getLassoElements` before
+  `deleteLassoElements`; an empty selection makes `deleteLassoElements` fail with
+  **error 904** ("No lasso action has been performed").
+
+---
+
+## `reloadFile` discards unsaved strokes; `insertElements` does not round-trip
+
+Extending the cached-copy behavior above:
+
+- User strokes drawn into the open note live in the **cached copy** until a save.
+  `reloadFile` reloads cache←real, so calling it after a file-level write
+  **discards any unsaved (cache-only) strokes** — the user's recent writing
+  vanishes. Combined with file writes being non-undoable, file-level mutation of
+  the open note is hazardous; prefer the lasso pipeline.
+- `insertElements` does **not** faithfully round-trip an element read back from
+  `getElements`: re-inserting it places the stroke at a **shifted** position. Do
+  not rely on delete-then-reinsert to restore an element unchanged.
+
+---
+
+## PEN_UP element identity
+
+The `PEN_UP` payload's element carries a `numInPage`, but it is a
+**session/monotonic counter**, not a page index, and does **not** reliably match
+the page's `getElementNumList` (which reflects persisted elements). Use the
+uuid-keyed accessors for the stroke's data; do not assume the PEN_UP `numInPage`
+addresses the element in file-level calls.

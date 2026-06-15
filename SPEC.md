@@ -19,22 +19,38 @@ button: it reacts to the drawing gesture itself.
 
 **Outcome**:
 - The scribble stroke itself is deleted (it never remains visible).
-- Every pre-existing stroke that the scribble's path crosses/covers is also
+- Every pre-existing stroke (or text item, or link, or any element actually) that the scribble's path crosses/covers is also
   deleted.
-- Content that isn't crossed by the scribble is untouched, even if it's on the
-  same page or nearby.
+- Content that isn't crossed by the scribble is *intended* to be untouched. In
+  practice the erase is performed through the host's lasso pipeline (the only
+  undoable delete path — see "Undo"), which selects strokes by rectangle. So the
+  delete targets the **combined bounding box of the crossed strokes**, and an
+  untouched stroke that happens to sit *fully inside* that box is also deleted.
+  This collateral is usually small (a scribble is small/dense, so crossed strokes
+  cluster) but grows when the scribble crosses a long stroke or two far-apart
+  strokes. It is always recoverable via Undo. See "Limits and edge cases".
 
 ### Scribble detection
-A stroke counts as a "scribble" if its drawn path is small and dense relative
-to normal handwriting — concretely (placeholder thresholds, to be tuned):
-- the path reverses direction many times within a small bounding box (a
-  back-and-forth zigzag or cross-hatch), and
-- the ratio of total path length to bounding-box diagonal is high (the pen
-  covered the same small area repeatedly).
+A stroke counts as a "scribble" if it oscillates back and forth many times — the
+defining trait of a zigzag/cross-hatch. Concretely (calibrated against a labeled
+corpus):
+- Project the stroke's points onto each of its two principal axes (PCA) and
+  count direction reversals along each, ignoring sub-deadband wiggles; take the
+  larger of the two counts. A stroke is a scribble when that count meets a
+  threshold (currently **≥ 10**).
+- The path-length / bounding-box-diagonal **ratio is deliberately NOT used**: in
+  the corpus it failed to separate (dense cursive reached 3.3 while real
+  scribbles dropped to 1.3). Reversal count is the sole discriminator.
 
-Single continuous stroke only (one pen-down-to-up). Classification must be
-cheap and computed from the stroke's own points — no SDK read of other
-elements unless the stroke already looks like a scribble.
+The reversal margin between normal writing and scribbles is real but not huge
+(normal handwriting in the corpus topped out at 8). The threshold is the knob to
+revisit if false positives appear; because the erase is undoable, a rare false
+positive is recoverable.
+
+Single continuous stroke only (one pen-down-to-up). Classification is cheap and
+computed from the stroke's own points (two bridge calls to read them) — no SDK
+read of other elements happens unless the stroke is already classified a
+scribble.
 
 ## Persistence
 
@@ -42,44 +58,51 @@ None beyond the page edit itself. This is a one-shot transform (delete N
 elements); the `.note` file's own persistence covers it. No plugin `userData`
 is written or read.
 
+## Undo
+
+The feature must be undo'able, and is. Undo comes from the host's normal undo
+stack, not a plugin API. The deciding factor (established on-device): edits made
+through the **lasso / interactive pipeline** (`lassoElements` →
+`deleteLassoElements`) are recorded on the undo stack, while file-level
+`PluginFileAPI` writes (`deleteElements` / `insertElements` / `replaceElements`)
+are **not**. Scribble therefore deletes via the lasso pipeline. (This also
+explains the SPEC's earlier puzzle: shape-snap's lasso path is undoable;
+collapse-expand's file-level path is not.)
+
 ## Limits and edge cases
 
-- Only **strokes** (ink) are erase candidates, both as the scribble and as
-  targets. Text boxes, pictures, titles, links, and geometry are left alone
-  even if the scribble crosses them.
 - A scribble that only partially crosses a stroke still deletes that stroke
   **in full** — no partial/clipped erase.
 - Multi-stroke scribbles (pen lifted mid-gesture) are not detected; each
   stroke is classified independently.
+- **Collateral deletion.** Because the lasso selects by rectangle, an untouched
+  stroke that lies fully inside the bounding box of the crossed strokes is also
+  deleted. Recoverable via Undo. As a guard, if the lasso selection is far larger
+  than the set of strokes actually detected as crossed, the operation aborts
+  rather than mass-deleting.
 
-## Open questions / SDK feasibility risks
+## Open questions / SDK feasibility risks — resolved by the Step-0 spike
 
-1. **False positives are destructive and likely unrecoverable.** If normal
-   handwriting (e.g. a tightly-looped cursive word, a filled-in shape, repeated
-   tracing) is misclassified as a scribble, the user's content — and whatever
-   it crosses — is deleted with no undo path that we know of. This is the
-   central risk and needs either: a very conservative detector tuned against
-   real handwriting samples, a confirmation step (but the SDK's only
-   confirmation UI is a blocking modal, which breaks the "just scribble"
-   flow), or a deliberate "uncommon" gesture shape (e.g. requiring more
-   reversals than any normal letterform produces).
-2. **No undo API found in `sn-plugin-lib`** (not yet re-checked for this
-   project) — confirm whether one exists before relying on "it's reversible if
-   we get it wrong."
-3. **"Crosses" needs a real geometric definition.** Bounding-box overlap is
-   cheap but coarse (two strokes can share a bbox without ever crossing);
-   true path/path intersection is more accurate but costs more per candidate.
-   Needs a cost/accuracy tradeoff once we know how many candidate strokes a
-   typical page has.
-4. **Cost of finding candidates.** `getElements` marshals every element on the
-   page (documented as expensive on dense pages). The scribble-classification
-   step must reject ordinary strokes *before* any SDK read, so normal writing
-   never pays this cost — only an actual scribble gesture does.
-5. **`PEN_UP` payload shape for a stroke** — confirm it includes the full
-   `points`/`pressures` array (needed for the zigzag/reversal analysis) and
-   not just metadata.
-6. **Deleting elements that were *just* inserted by this same `PEN_UP`.** The
-   scribble stroke itself was just drawn — confirm `deleteElements` can target
-   it immediately (vs. the real/cached file split documented in `SDK_DOC.md`
-   requiring a `reloadFile` before a just-written element is visible/targetable
-   again).
+1. **False positives.** RESOLVED to "acceptable, recoverable." The detector is
+   reversal-based (≥10) and false positives are recoverable via Undo (the erase
+   goes through the undoable lasso pipeline). No confirmation modal is needed,
+   preserving the "just scribble" flow. The reversal threshold stays the tuning
+   knob; the normal-vs-scribble margin is real but modest.
+2. **Undo.** RESOLVED. The lasso/interactive pipeline is undoable; file-level
+   writes are not. Scribble deletes via the lasso pipeline. (See "Undo".)
+3. **"Crosses" geometric definition.** RESOLVED as: bbox prefilter (candidate
+   stroke's bbox overlaps the scribble's bbox) → true polyline segment
+   intersection between the scribble path and the candidate. The actual delete
+   then targets the union bounding box of the crossed strokes (lasso constraint),
+   with the collateral caveat above.
+4. **Cost of finding candidates.** ACCEPTED. Detection runs first from the
+   stroke's own points (no page read); only a confirmed scribble pays the
+   `getElements` page read. A future optimization is a native module (see
+   `SDK_DOC.md`).
+5. **`PEN_UP` payload shape.** RESOLVED. The payload delivers the stroke with a
+   uuid-keyed points accessor; the full path reads in two bridge calls.
+6. **Deleting just-drawn elements.** RESOLVED/MOOT. We do not use file-level
+   `deleteElements`; the lasso pipeline selects and deletes just-drawn strokes
+   directly (a full-page lasso selected them in testing). File-level writes are
+   avoided entirely — they are non-undoable and, with `reloadFile`, can discard
+   unsaved strokes.
