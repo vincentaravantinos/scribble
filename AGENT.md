@@ -134,6 +134,9 @@ separate pass — do them one at a time, don't fold them together:
    mid-execution. Review the operation sequences to minimize data loss when a
    call fails partway — order mutations so an interruption leaves the note in the
    least-damaged state.
+5. **User manual.** Make sure `README.md` carries an up-to-date user manual —
+   what the plugin does, how to install it, and how to use it — written for the
+   end user, not the developer. Update it for whatever changed in this release.
 
 # Steps independent of workflow
 
