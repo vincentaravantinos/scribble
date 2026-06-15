@@ -40,6 +40,7 @@ export async function eraseByScribble(
     return;
   }
   let viewShown = false;
+  let lassoOpen = false;
   let pageEls: any[] = [];
   try {
     // Non-blocking "Working…" overlay; the page read can take seconds on a dense
@@ -96,11 +97,15 @@ export async function eraseByScribble(
       dlog(`${LOG} erase: lassoElements failed ${JSON.stringify(lr?.error)}`);
       return;
     }
+    // From here a lasso is open; the finally always releases it, so an abort or
+    // an exception can't leave a dangling selection (which would silently
+    // corrupt the host's element list across the next mutation).
+    lassoOpen = true;
+
     const selRes: any = await PluginCommAPI.getLassoElements();
     const selected: any[] = selRes?.success ? (selRes.result ?? []) : [];
     if (selected.length === 0) {
       dlog(`${LOG} erase: lasso selected nothing — aborting`);
-      await PluginCommAPI.setLassoBoxState(2);
       return;
     }
 
@@ -111,17 +116,20 @@ export async function eraseByScribble(
     const over = Math.max(0, selected.length - (crossed.length + 1));
     if (over > MAX_COLLATERAL_STROKES) {
       dlog(`${LOG} erase: over=${over} > ${MAX_COLLATERAL_STROKES} — aborting`);
-      await PluginCommAPI.setLassoBoxState(2);
       alert('Scribble would erase too much nearby content — cancelled.');
       return;
     }
 
     const del: any = await PluginCommAPI.deleteLassoElements();
     dlog(`${LOG} erase: deleted=${selected.length} crossed=${crossed.length} over=${over} success=${del?.success}`);
-    await PluginCommAPI.setLassoBoxState(2);
   } catch (err) {
     console.error(`${LOG} eraseByScribble failed:`, err);
   } finally {
+    // Release the lasso on every path (success, abort, or exception) before any
+    // later mutation can run.
+    if (lassoOpen) {
+      try { await PluginCommAPI.setLassoBoxState(2); } catch (e) { dlog(`${LOG} erase: setLassoBoxState failed: ${e}`); }
+    }
     for (const e of pageEls) {
       try { e?.recycle?.(); } catch { /* ignore */ }
     }

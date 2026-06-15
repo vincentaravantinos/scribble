@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## v0.1.0 — 2026-06-15
 
 - **Erase-by-scribble.** Draw a tight back-and-forth scribble over handwriting
   and the crossed strokes — plus the scribble itself — are deleted. No button, no
