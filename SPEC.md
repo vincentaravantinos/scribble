@@ -31,26 +31,25 @@ drawing gesture itself.
   strokes. It is always recoverable via Undo. See "Limits and edge cases".
 
 ### Scribble detection
-A stroke counts as a "scribble" if it oscillates back and forth markedly more
-than handwriting does. Concretely (calibrated against a labeled corpus): project
-the stroke's points onto each of its two principal axes (PCA) and count direction
-reversals along each (ignoring sub-deadband wiggles). It's a scribble if **either**:
-- the **stronger** axis reverses many times (≥ 13) — a vigorous scribble, even a
-  one-directional one; **or**
-- **both** axes reverse a fair amount (≥ 10) — an area-filling scrub.
+A scribble is a single **consistent back-and-forth**: its segments all point along
+one axis, and it reverses along that axis several times. Concretely (calibrated
+against a labeled corpus of real strokes):
+- **Direction consistency** — the length-weighted concentration of the stroke's
+  segment directions (doubled, so a 180°-apart back-and-forth reinforces), 0–1.
+  A scribble's segments lie along one direction → high; handwriting goes many
+  directions → low. A stroke is a scribble when consistency ≥ 0.85.
+- **Reversals** — it must actually oscillate along that axis (≥ 5), which excludes
+  a single consistent straight stroke (also high-consistency).
+- A loose bounding-box-diagonal backstop.
 
-**Why this OR, not a single threshold:** cursive handwriting oscillates too (it's
-a zigzag that advances, with loops), so it lands close to scribbles on any single
-axis. In the corpus a full cursive phrase reached stronger-axis 12 / weaker-axis
-9, sitting in the one corner that fails *both* tests, while every erase-scribble
-cleared one or the other (stronger-axis 13–24, or weaker-axis 10–22). Path-length
-ratio and retrace-density were evaluated and do **not** separate the two; they are
-not used.
-
-The margins are thin (cursive is ~1 below each bar), so an unusually dense or long
-cursive word can still occasionally be misread as a scribble — recoverable via
-Undo. (A more categorical signal — cursive makes loops, scribbles don't — is a
-known future improvement; see BACKLOG.md.)
+**Why consistency, not shape:** a scribble and (even zig-zaggy) cursive have the
+same *shape* — every shape feature tried overlapped (reversal count on either
+axis, oscillation wavelength, retrace/fill density, self-intersection loop count
+and area, principal-axis orientation). What separates them is that a scribble goes
+**one consistent direction** while handwriting — letters, ligatures, loops — goes
+many. On a labeled corpus this was clean: scribbles measured consistency 0.96–0.98,
+words ≤ 0.77 — a wide margin, and orientation-agnostic (a scribble at any angle
+qualifies). A regression test (`__tests__/`) pins this against the captured corpus.
 
 Single continuous stroke only (one pen-down-to-up). Classification is cheap and
 computed from the stroke's own points (two bridge calls to read them) — no SDK

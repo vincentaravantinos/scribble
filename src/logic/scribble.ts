@@ -1,6 +1,8 @@
 /**
- * PEN_UP entry point. Classifies each just-drawn stroke from its own points
- * (cheap, no page read); if it's a scribble, erases the strokes it crosses.
+ * PEN_UP entry point. A stroke triggers an erase only if it (a) looks scribbly
+ * enough to be worth checking (cheap shape pre-filter, no page read) and (b)
+ * actually crosses existing ink (the overlap gate, in eraseByScribble). A
+ * scribbly stroke on blank space is just writing/drawing and is left alone.
  *
  * The lib mutates the payload elements in place via transformElements, so each
  * carries a uuid-keyed points accessor.
@@ -21,14 +23,14 @@ export async function onScribblePenUp(elements: any[]): Promise<void> {
     if (!Array.isArray(elements) || elements.length === 0) return;
 
     for (const el of elements) {
-      if (el?.type !== TYPE_STROKE) continue; // only strokes can be scribbles
+      if (el?.type !== TYPE_STROKE) continue;
 
       const pts = await readStrokePoints(el);
       const cls = classifyScribble(pts);
       const tag = typeof el?.uuid === 'string' ? el.uuid.slice(0, 8) : '????????';
       dlog(
-        `${LOG} STROKE ${tag} build=${BUILD_TAG} maj=${cls.major} min=${cls.minor} ` +
-          `reversals=${cls.reversals} diag=${cls.diagonal.toFixed(0)} ` +
+        `${LOG} STROKE ${tag} build=${BUILD_TAG} conc=${cls.conc.toFixed(2)} ` +
+          `rev=${cls.rev} diag=${cls.diagonal.toFixed(0)} ` +
           `-> ${cls.isScribble ? 'SCRIBBLE' : 'normal'}`,
       );
       if (!cls.isScribble) continue;

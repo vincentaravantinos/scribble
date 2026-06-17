@@ -123,33 +123,6 @@ export function countReversals(seq: number[], deadbandFrac: number): number {
   return reversals;
 }
 
-/**
- * Reversal counts along the stroke's two principal axes (PCA). A scribble drifts
- * along one axis and oscillates along the perpendicular one, so the zigzag may
- * show up on either axis.
- */
-export function reversalCountsByAxis(pts: Pt[], deadbandFrac: number): { major: number; minor: number } {
-  if (pts.length < 3) return { major: 0, minor: 0 };
-  let sx = 0, sy = 0;
-  for (const p of pts) {
-    sx += p.x;
-    sy += p.y;
-  }
-  const mx = sx / pts.length, my = sy / pts.length;
-  let cxx = 0, cyy = 0, cxy = 0;
-  for (const p of pts) {
-    const dx = p.x - mx, dy = p.y - my;
-    cxx += dx * dx;
-    cyy += dy * dy;
-    cxy += dx * dy;
-  }
-  const theta = 0.5 * Math.atan2(2 * cxy, cxx - cyy);
-  const ct = Math.cos(theta), st = Math.sin(theta);
-  const major = pts.map(p => (p.x - mx) * ct + (p.y - my) * st);
-  const minor = pts.map(p => -(p.x - mx) * st + (p.y - my) * ct);
-  return { major: countReversals(major, deadbandFrac), minor: countReversals(minor, deadbandFrac) };
-}
-
 function orient(a: Pt, b: Pt, c: Pt): number {
   return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 }
@@ -175,6 +148,35 @@ export function segmentsIntersect(p1: Pt, p2: Pt, p3: Pt, p4: Pt): boolean {
   if (d3 === 0 && onSegment(p1, p2, p3)) return true;
   if (d4 === 0 && onSegment(p1, p2, p4)) return true;
   return false;
+}
+
+/**
+ * Sweep metrics: how consistently the stroke's segments point along ONE axis
+ * (`conc`, 0–1), and the number of reversals along that axis (`rev`). A scribble
+ * is a single consistent back-and-forth → high `conc`; handwriting goes many
+ * directions → low `conc`. `conc` is a length-weighted circular concentration of
+ * segment directions doubled (so a back-and-forth, 180° apart, reinforces).
+ */
+export function sweepMetrics(pts: Pt[], deadbandFrac: number): { conc: number; rev: number } {
+  if (pts.length < 3) return { conc: 0, rev: 0 };
+  let cx = 0, sx = 0, w = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x;
+    const dy = pts[i].y - pts[i - 1].y;
+    const l = Math.hypot(dx, dy);
+    if (l === 0) continue;
+    const th = Math.atan2(dy, dx);
+    cx += l * Math.cos(2 * th);
+    sx += l * Math.sin(2 * th);
+    w += l;
+  }
+  if (w === 0) return { conc: 0, rev: 0 };
+  const conc = Math.hypot(cx, sx) / w;
+  const deg = 0.5 * Math.atan2(sx, cx); // dominant sweep axis (radians)
+  const ux = Math.cos(deg), uy = Math.sin(deg);
+  const proj = pts.map(p => p.x * ux + p.y * uy);
+  const rev = countReversals(proj, deadbandFrac);
+  return { conc, rev };
 }
 
 /** True if any segment of polyline `a` intersects any segment of polyline `b`. */

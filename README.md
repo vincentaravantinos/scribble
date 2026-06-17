@@ -1,6 +1,6 @@
 # Scribble
 
-Erase Supernote handwriting the way you do on paper: scribble back and forth over
+Erase Supernote handwriting the way you do on paper: scrub back and forth over
 the strokes you want gone, lift the pen, and they disappear — along with the
 scribble itself. No lasso, no button; it reacts to the gesture.
 
@@ -16,20 +16,29 @@ scribble itself. No lasso, no button; it reacts to the gesture.
 
 ## How to use
 
-- **Erase:** scribble back and forth over the strokes you want to remove (a few
-  firm passes, like crossing something out), then lift the pen. The crossed
-  strokes and the scribble both vanish.
+- **Erase:** scribble a **zig-zag** back and forth over the strokes you want to
+  remove (a few quick passes), then lift the pen. The crossed strokes and the
+  scribble both vanish.
 - **Undo:** changed your mind? Tap the device **Undo** button — everything comes
   back.
 
 That's the whole plugin. There's nothing to open or configure.
 
+### What counts as a scribble
+
+Only a **zig-zag** — a quick back-and-forth in one consistent direction — is
+recognized. Deliberately **not** recognized (so they don't fire by accident):
+
+- a **single strikethrough** line through a word (not enough back-and-forth),
+- an **X / cross-out** (two strokes / two directions, not one consistent zig-zag).
+
+To erase, scribble in a zig-zag.
+
 ### Good to know
 
-- **Normal writing is safe.** Detection requires markedly more back-and-forth
-  than handwriting produces, so ordinary writing doesn't trigger an erase. Dense
-  cursive sits closest to the line, so a rare misread is possible — that's what
-  Undo is for.
+- **Normal writing is safe.** A scribble goes one consistent back-and-forth
+  direction; handwriting — including cursive — goes many directions, so it won't
+  trigger an erase. A rare misread is still possible — that's what Undo is for.
 - **It won't run away.** If a scribble would take in far more content than it
   actually crossed, it cancels itself instead of wiping a large area.
 

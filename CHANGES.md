@@ -1,5 +1,15 @@
 # Changes
 
+## v1.1.0 — 2026-06-17
+
+- **Reliable scribble detection — no more cursive false positives.** Detection
+  now keys on *direction consistency*: a scribble is a single back-and-forth
+  zig-zag (segments along one axis), while handwriting — including dense cursive —
+  goes many directions. Calibrated on a corpus of real strokes (0 false positives,
+  0 false negatives). It's instant (no page read while writing) and works at any
+  angle. Only zig-zags are recognized — a single strikethrough or an X/cross is
+  intentionally not treated as an erase.
+
 ## v1.0.1 — 2026-06-15
 
 - **Fewer false positives on cursive.** Retuned detection so cursive handwriting

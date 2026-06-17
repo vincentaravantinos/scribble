@@ -4,6 +4,43 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-06-17 — Scribble detection by direction CONSISTENCY (final; supersedes all prior detection entries)
+
+**Decision:** Classify a stroke as a scribble by **direction consistency** — the
+length-weighted circular concentration of its segment directions (doubled so a
+180°-apart back-and-forth reinforces): `conc ≥ 0.85` AND it reverses ≥ 5 times
+along that axis (+ a loose bbox cap). Computed from the stroke's own points; no
+page read. The erase still goes through the lasso pipeline.
+
+**Why:** A scribble and (even zig-zaggy) cursive have the same *shape*, so every
+shape feature failed — reversal count (max-axis, both-axes), oscillation
+wavelength, retrace/fill density, self-intersection loop count and area, and
+principal-axis orientation all overlapped between the classes on real data. The
+separating property is that a scribble goes **one consistent direction** while
+handwriting (letters, ligatures, loops) goes **many**. On an intent-labeled corpus
+of real strokes, scribbles measured consistency 0.96–0.98 and words ≤ 0.77 — a
+wide margin, **0 false positives / 0 false negatives**. It is also
+orientation-agnostic (the user's scribbles are diagonal, but the rule doesn't
+depend on that). Pinned by a regression test against the saved corpus
+(`__tests__/fixtures/scribble-corpus.json`).
+
+**Rejected (all tested on real data, all overlapped):** max-axis reversals
+(≥10/≥13); both-axes "2-D scrub" (≥10/≥12) — caused false negatives on
+1-D scribbles; an OR of the two — false-positived on dense cursive; wavelength;
+retrace/fill density; loop count and loop area; principal-axis "diagness"
+(measured elongation, not the user-perceived sweep direction). Also rejected the
+**context/overlap method** (erase only if the stroke crosses existing ink): it is
+*correct* and is how OneNote/GoodNotes do it, but on this SDK the required
+`getElements` page read is ~4 s and would run on every scribbly-shaped stroke
+(incl. cursive), freezing writing — not viable without a native module.
+
+**Tooling note:** logcat drops ~10–60% of lines (worse for long/point lines, and
+under rapid input), which repeatedly corrupted small-sample analysis. The fix was
+to capture downsampled stroke points (with a seq counter to detect drops) into a
+saved fixture and develop the classifier **offline** against it. A reliable
+on-device capture would need a small native file-export module (the same module
+that would make the overlap method fast).
+
 ## 2026-06-15 — Erase via the lasso pipeline, not the file API
 
 **Decision:** Delete strokes with `lassoElements(rect)` → `deleteLassoElements()`,
@@ -40,7 +77,36 @@ which is the common case. (c) uuid-based collateral guard — `getElements` and
 `getLassoElements` do not share uuid values, so identity matching across them is
 unreliable; the guard counts instead.
 
-## 2026-06-15 — Scribble detection: OR of strong-axis and both-axes reversals (supersedes the entry below)
+## 2026-06-16 — Scribble detection: 2-D scrub only (weaker axis ≥ 13); 1-D not detectable
+
+**Decision:** A stroke is a scribble only if **both** PCA axes oscillate — gate on
+the weaker axis's reversal count (≥ 13). A single-direction (1-D) zigzag is, by
+design, not detected.
+
+**Why:** This was settled empirically after the OR rule below kept false-positiving
+on more cursive ("menu", "express"). A 1-D scribble and a cursive word are the
+**same gesture** — a zigzag that advances along a line — and a full labeled corpus
+showed they are inseparable on *every* feature tried: max-axis reversals, weaker-
+axis reversals, oscillation wavelength, retrace/fill density, self-intersection
+(loop) **count**, and loop **area** all overlap (e.g. 1-D scribble `maj 6/min 13`
+vs cursive `maj 2/min 13`; loop areas: cursive 6–131, scribbles 7–64). The only
+robust separator is dimensionality: an erase-scribble fills an area (oscillates in
+**both** directions), cursive does not. On intent-labeled data, writing (cursive
+plus a dense compact word) reached weaker-axis 12; 2-D scrubs measured 13–33, so
+the bar is 13. The PO accepted the tradeoff that a 1-D zigzag won't erase (it
+can't be told from writing) in exchange for no false positives.
+
+**Rejected:** max-axis ≥ N (fires on cursive); the OR rule below (fires on 2-D-ish
+cursive like "menu"/"express"); **loop count and loop area** (tested with a
+dedicated instrumented build — do not separate; scribbles self-cross via
+overlapping passes and can enclose large areas too); a confirmation step / hybrid
+auto+confirm (PO preferred no UI over catching 1-D scribbles).
+
+**Tradeoff / knob:** a one-directional zigzag no longer erases — users scrub in
+both directions. Weaker-axis margin to writing is ~1 (writing 12, bar 13); undo
+remains the backstop for a rare misread.
+
+## 2026-06-15 — Scribble detection: OR of strong-axis and both-axes reversals (SUPERSEDED 2026-06-16)
 
 **Decision:** A stroke is a scribble if **either** its stronger PCA axis reverses
 ≥ 13 times **or** both axes reverse ≥ 10 times (plus a loose bbox cap).

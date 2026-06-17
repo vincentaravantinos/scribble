@@ -1,11 +1,13 @@
 /**
- * The erase operation: given a stroke already classified as a scribble, delete
- * the strokes it crosses (plus itself) via the lasso pipeline — the only
- * undoable delete path.
+ * The erase operation: the stroke has already been classified a scribble. Delete
+ * the strokes it crosses (plus itself) via the lasso pipeline — the only undoable
+ * delete path.
  *
  * Sequence: read the page → find crossed strokes (bbox prefilter → polyline
- * intersection) → lasso the union bounding box (in screen coords) → guard
- * against over-selection → deleteLassoElements → release the lasso.
+ * intersection, excluding the just-drawn stroke) → lasso the union bounding box
+ * (screen coords) → over-selection guard → deleteLassoElements → release the
+ * lasso. The page read happens only here (on a confirmed scribble), never during
+ * normal writing.
  *
  * @format
  */
@@ -26,6 +28,16 @@ import {
 } from '../utils/geometry';
 
 const TYPE_STROKE = 0;
+
+/** Two bounding boxes are the same stroke read back (all corners within eps). */
+function sameBbox(a: Bbox, b: Bbox, eps = 3): boolean {
+  return (
+    Math.abs(a.minX - b.minX) < eps &&
+    Math.abs(a.minY - b.minY) < eps &&
+    Math.abs(a.maxX - b.maxX) < eps &&
+    Math.abs(a.maxY - b.maxY) < eps
+  );
+}
 
 export async function eraseByScribble(
   scribbleEl: any,
@@ -58,7 +70,8 @@ export async function eraseByScribble(
       return;
     }
 
-    // Find the strokes the scribble actually crosses.
+    // Find the pre-existing strokes the candidate actually crosses.
+    const t0 = Date.now();
     const elsRes: any = await PluginFileAPI.getElements(page, filePath);
     pageEls = elsRes?.success ? (elsRes.result ?? []) : [];
     const crossed: { uuid: string; box: Bbox }[] = [];
@@ -67,12 +80,16 @@ export async function eraseByScribble(
       const pts = await readStrokePoints(e);
       const box = bboxOf(pts);
       if (!box || !bboxesOverlap(box, scribbleBox)) continue; // cheap prefilter
+      // Robust self-exclusion: the just-drawn stroke is ALSO in getElements,
+      // often with a different uuid (uuid isn't consistent across SDK APIs), so
+      // the uuid check above can miss it. Skip it by geometry — otherwise a
+      // self-intersecting cursive word "crosses itself" and erases itself.
+      if (sameBbox(box, scribbleBox)) continue;
       if (polylinesCross(scribblePts, pts)) crossed.push({ uuid: e.uuid, box });
     }
-    dlog(`${LOG} erase: pageElements=${pageEls.length} crossed=${crossed.length}`);
+    dlog(`${LOG} erase: pageElements=${pageEls.length} crossed=${crossed.length} readMs=${Date.now() - t0}`);
 
-    // Lasso the union bbox of the crossed strokes plus the scribble itself, so
-    // the scribble is always erased even if it crossed nothing.
+    // Lasso the union bbox of the crossed strokes plus the scribble itself.
     const region = unionBbox([scribbleBox, ...crossed.map(c => c.box)]);
     if (!region) return;
     const psRes: any = await PluginFileAPI.getPageSize(filePath, page);

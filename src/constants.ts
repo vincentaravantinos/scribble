@@ -9,21 +9,18 @@ export function dlog(...args: any[]): void {
 
 // Logged at each action start to confirm which build is actually live: pushing a
 // new .snplg doesn't always replace the running one. Bump per deploy.
-export const BUILD_TAG = 'v1.0.1';
+export const BUILD_TAG = 'v1.1.0';
 
-// Scribble detection thresholds, calibrated against a labeled corpus. A stroke
-// is a scribble if EITHER condition holds (reversals are counted per PCA axis):
-//   - the stronger axis oscillates a lot (STRONG_AXIS) — a vigorous scribble, or
-//   - both axes oscillate a fair amount (BOTH_AXES) — an area-filling scrub.
-// Cursive sits in the one corner that fails both: in the corpus a full cursive
-// phrase reached max 12 / min 9, while every erase-scribble cleared one bar or
-// the other (max 13–24, or min 10–22). Margins are thin (cursive is 1 below each
-// bar); these are the knobs to revisit, and undo is the backstop.
+// Scribble detection: a scribble is a single CONSISTENT back-and-forth.
+// - MIN_CONCENTRATION: how aligned the stroke's segments are to one axis (0–1).
+//   A scribble's segments all lie along one direction → high; handwriting goes
+//   many directions → low. Labeled corpus: scribbles 0.96–0.98, words ≤ 0.77.
+// - MIN_REVERSALS: it must actually oscillate along that axis (excludes a single
+//   consistent straight stroke, which is also high-concentration).
+// - MAX_BBOX_DIAGONAL: loose size backstop.
 export const SCRIBBLE_THRESHOLDS = {
-  STRONG_AXIS_REVERSALS: 13,
-  BOTH_AXES_REVERSALS: 10,
-  // Loose backstop only. A large single sweep is already rejected by the
-  // reversal gate (a straight sweep has ~0 reversals).
+  MIN_CONCENTRATION: 0.85,
+  MIN_REVERSALS: 5,
   MAX_BBOX_DIAGONAL: 12000,
 };
 
