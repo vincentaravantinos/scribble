@@ -4,6 +4,38 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-06-17 — Landscape erase not supported; skip in landscape
+
+**Decision:** Erase-by-scribble runs in portrait only. In landscape
+(`getOrientation()` ∈ {1, 3}) a detected scribble shows a brief notice and does
+nothing, gated before any lasso call.
+
+**Why:** In landscape the device renders a **split half-page**, and the host
+lasso pipeline — the only undoable delete path — does not work there. A focused
+investigation established two independent blockers: (a) the EMR→screen mapping in
+split mode is **not a simple invertible transform** (a rotation-robust probe
+found different page positions collapsing to the same pixel footprint, i.e. the
+lasso doesn't localise by position), and (b) `lassoElements` **hangs and never
+returns** for some rectangles in this mode, which would freeze the plugin. The
+SDK exposes no split-mode coordinate conversion (`getRealMaxX`/`emrPoint2Android`
+throw on split page sizes, `getPageRotationType` is stubbed) and no
+visible-region query, so there is no reliable way to aim the lasso. Given an
+errant lasso in an *eraser* either deletes the wrong ink or hangs, skipping is
+the only safe behaviour. Detection and crossing themselves do work in landscape
+(PEN_UP and getElements share the EMR frame), so only the delete step is gated.
+
+**Rejected:** (a) Reverse-engineering the split transform — empirically the
+mapping isn't a clean affine and the measurement itself is blocked by the
+`lassoElements` hang; even a perfect transform couldn't be issued safely.
+(b) A native-module lasso — possible but out of scope; logged in BACKLOG.md.
+(c) Shipping without a guard — v1.1.0's portrait transform would still fire
+`lassoElements` in landscape and risk the hang, so the guard is a safety fix, not
+a feature.
+
+**Constraint for future work:** unblocked only by SDK split-mode support
+(`getPageRotationType`, split-aware converters, visible-half query — see
+FEEDBACK.md) or a native-module delete path.
+
 ## 2026-06-17 — Scribble detection by direction CONSISTENCY (final; supersedes all prior detection entries)
 
 **Decision:** Classify a stroke as a scribble by **direction consistency** — the

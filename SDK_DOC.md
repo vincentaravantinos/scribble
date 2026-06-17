@@ -385,6 +385,35 @@ Extending the cached-copy behavior above:
 
 ---
 
+## Orientation and landscape (split-page) mode
+
+- **`NativePluginManager.getOrientation()`** returns the current device
+  orientation as a number: `0`/`2` for the portrait orientations (0°/180°),
+  `1`/`3` for the landscape orientations (90°/270°). Use it to branch behaviour
+  by orientation.
+- In landscape the device does **not** show the whole page rotated; it shows a
+  **split half-page** (the `*_UD` / `*_LR` rotation types in
+  `PointUtils.ROTATION_*`). `PluginFileAPI.getPageSize` returns the **same**
+  portrait dimensions (e.g. 1404×1872) in both orientations, but the page's real
+  EMR maximum differs per rotation — substantially larger in a split mode (the
+  commented `PointUtils.getRealMaxX(machine, rotation)` table lists the values,
+  e.g. A5X2 `ROTATION_90_UD` ≈ 28854×21632 vs portrait ≈ 21632×16224).
+- **The EMR↔screen converters do not support split modes.**
+  `PointUtils.emrPoint2Android` / `androidPoint2Emr` derive the EMR max from
+  `getRealMaxX(pageSize)`, which only has cases for portrait and full-landscape
+  page sizes and throws on split sizes. `getPageRotationType` is not implemented
+  (the wrapper is commented out and absent from the native module). There is no
+  exposed way to query which half is currently visible (scroll position).
+- **The lasso pipeline is unreliable in landscape split mode.** A rectangle in
+  the reported page coordinate space does not map to the visible content the way
+  it does in portrait (the relationship is not a simple invertible transform),
+  and `lassoElements` can **hang and never resolve** for some rectangles in this
+  mode, freezing the plugin. Treat programmatic lasso (and therefore the undoable
+  delete path) as **portrait-only**: gate on `getOrientation()` and skip in
+  landscape rather than risk a hang.
+
+---
+
 ## PEN_UP element identity
 
 The `PEN_UP` payload's element carries a `numInPage`, but it is a
