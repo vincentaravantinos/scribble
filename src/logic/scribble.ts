@@ -10,7 +10,7 @@
  * @format
  */
 
-import { PluginCommAPI } from 'sn-plugin-lib';
+import { PluginCommAPI, NativePluginManager } from 'sn-plugin-lib';
 import { BUILD_TAG, dlog, LOG } from '../constants';
 import { readStrokePoints } from '../utils/geometry';
 import { classifyScribble } from './detect';
@@ -34,6 +34,21 @@ export async function onScribblePenUp(elements: any[]): Promise<void> {
           `-> ${cls.isScribble ? 'SCRIBBLE' : 'normal'}`,
       );
       if (!cls.isScribble) continue;
+
+      // Landscape (split-page) mode is not supported: the host's lasso pipeline
+      // misbehaves there — lassoElements can hang and never return, freezing the
+      // plugin. Skip the erase rather than risk that. getOrientation returns 1/3
+      // for the 90°/270° landscape orientations (0/2 are portrait).
+      let orientation = 0;
+      try {
+        const o = await (NativePluginManager as any).getOrientation();
+        if (typeof o === 'number') orientation = o;
+      } catch { /* assume portrait if unavailable */ }
+      if (orientation === 1 || orientation === 3) {
+        dlog(`${LOG} STROKE ${tag} landscape (orientation=${orientation}) — erase unsupported, skipping`);
+        alert('Scribble erase isn’t available in landscape mode yet.');
+        continue;
+      }
 
       const pathRes: any = await PluginCommAPI.getCurrentFilePath();
       const pageRes: any = await PluginCommAPI.getCurrentPageNum();

@@ -52,6 +52,9 @@ To erase, scribble in a zig-zag.
 - Slower on very dense pages — to find what a scribble crosses, the plugin reads
   the whole page (a cost the Supernote SDK charges per page, not per selection),
   and only when you actually scribble.
+- **Portrait only.** In landscape the Supernote shows a split half-page where the
+  erase can't run reliably, so a scribble there just shows a brief notice and does
+  nothing. Use the plugin in portrait orientation.
 
 ## Build from source
 

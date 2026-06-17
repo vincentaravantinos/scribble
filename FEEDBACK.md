@@ -18,6 +18,15 @@ Bug: insertElements does not preserve an element's position on re-insert.
 expected: the stroke is re-inserted at its original position.
 observed: the stroke is re-inserted shifted to a different position.
 
+Bug: lassoElements never returns (hangs the plugin) for some rectangles when the page is in a landscape split orientation.
+1. Rotate the device to landscape so the page shows a split half-page (getOrientation returns 1 or 3).
+2. From a plugin, call lassoElements with an integer rect in the lower region of the page coordinate space, e.g. { left: 720, top: 1620, right: 1080, bottom: 1871 } on a 1404x1872 page.
+3. await the result.
+expected: the promise resolves (selection made, or empty selection).
+observed: the call never returns; the plugin hangs (no getLassoElements/setLassoBoxState afterwards possible).
+
+doc of landscape/split coordinate handling is missing, here is a proposal: expose getPageRotationType (currently stubbed) and make emrPoint2Android / getRealMaxX support the split rotation types (ROTATION_90_UD etc.), plus a way to query the currently-visible half. Today getPageSize is unchanged in landscape, the real EMR max differs per rotation, and the converters throw on split page sizes, so plugins cannot map EMR<->screen in landscape at all.
+
 Bug: reloadFile after a file-level write discards unsaved strokes.
 1. Draw a few strokes by hand (do not save).
 2. From a plugin, call deleteElements (or any PluginFileAPI write) on the page.

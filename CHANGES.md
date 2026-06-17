@@ -9,6 +9,10 @@
   0 false negatives). It's instant (no page read while writing) and works at any
   angle. Only zig-zags are recognized — a single strikethrough or an X/cross is
   intentionally not treated as an erase.
+- **Landscape: erase is skipped (not supported yet).** In landscape the device
+  shows a split half-page and the host's lasso pipeline misbehaves there (it can
+  hang), so a scribble in landscape shows a brief notice and does nothing instead
+  of risking a freeze. Erase works in portrait. (Tracked for a future release.)
 
 ## v1.0.1 — 2026-06-15
 
