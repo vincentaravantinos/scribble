@@ -252,9 +252,12 @@ coalesce with a guard/flag rather than a timer.
 
 ## Non-blocking UI: the plugin's own view
 
-The native dialogs (`NativeUIUtils.showRattaDialog`, `showErrorTipDialog`, and
-`alert`) are **blocking modals** — they suspend the calling operation, so they
-can't show progress *during* one. The only non-blocking UI surface is the
+The host dialogs (`NativeUIUtils.showRattaDialog`, `showErrorTipDialog`) are
+**blocking modals** — they suspend the calling operation, so they can't show
+progress *during* one. (React Native's global `alert()` is **not wired up** in
+the plugin host — it silently no-ops, so use the host dialogs for any user-facing
+message; `showRattaDialog(tip, leftBtnText, rightBtnText, isSuccess)` takes
+arbitrary text.) The only non-blocking UI surface is the
 plugin's **own React view**, toggled with `PluginManager.showPluginView()` /
 `closePluginView()` (the component registered via `AppRegistry`). Showing it does
 not block JS execution, so an operation can `showPluginView()`, do its work, then

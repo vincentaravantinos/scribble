@@ -4,6 +4,28 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-06-18 — Erase robustness: relax the guard, clean up on cancel, real dialogs
+
+**Decision:** Raise the over-selection guard's collateral cap (3 → 12); on cancel,
+delete just the scribble (lasso its own box) so the gesture leaves no mark; route
+user messages through the host dialog (`showRattaDialog`) instead of RN's global
+`alert()`; and pad the lasso rect outward a few px so boundary strokes aren't
+missed.
+
+**Why:** Field reports of "scribble shows 'working…' but nothing deletes." Causes:
+(1) on dense pages the union-bbox lasso legitimately encloses a word's un-crossed
+strokes, so the count-based guard (cap 3) cancelled normal erases — the count is a
+loose proxy and had to be generous; (2) the cancel was *silent* (RN `alert()`
+doesn't surface in the host) and left the scribble on the page; (3) on higher-DPI
+devices (Manta/A5X2) a tighter "fully inside" lasso dropped the scribble — always
+the boundary stroke of the union box — erasing the text but not the scribble.
+
+**Rejected:** (a) Per-stroke lasso/delete (delete exactly the crossed strokes) —
+correct semantics, but N lasso cycles = N e-ink refreshes per erase, too visually
+noisy. (b) Size/area-based guard (allow while the deletion stays within the
+scribbled area) — cleaner in principle but a larger change; deferred in favor of
+simply raising the count cap.
+
 ## 2026-06-17 — Landscape erase not supported; skip in landscape
 
 **Decision:** Erase-by-scribble runs in portrait only. In landscape
