@@ -233,6 +233,16 @@ export function emrBboxToScreenRect(
   return rectFromCorners(corners);
 }
 
+/** Expands a rect by `pad` px on every side, clamped to [0, maxX] × [0, maxY]. */
+export function padRect(r: Rect, pad: number, maxX: number, maxY: number): Rect {
+  return {
+    left: Math.max(0, r.left - pad),
+    top: Math.max(0, r.top - pad),
+    right: Math.min(maxX, r.right + pad),
+    bottom: Math.min(maxY, r.bottom + pad),
+  };
+}
+
 function rectFromCorners(a: Pt[]): Rect {
   const xs = a.map(p => p.x);
   const ys = a.map(p => p.y);

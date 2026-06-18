@@ -9,7 +9,7 @@ export function dlog(...args: any[]): void {
 
 // Logged at each action start to confirm which build is actually live: pushing a
 // new .snplg doesn't always replace the running one. Bump per deploy.
-export const BUILD_TAG = 'v1.1.0';
+export const BUILD_TAG = 'v1.1.1';
 
 // Scribble detection: a scribble is a single CONSISTENT back-and-forth.
 // - MIN_CONCENTRATION: how aligned the stroke's segments are to one axis (0–1).
@@ -28,13 +28,24 @@ export const SCRIBBLE_THRESHOLDS = {
 // projected span, so dense-sample jitter doesn't inflate the count.
 export const REVERSAL_DEADBAND_FRAC = 0.1;
 
+// The erase lassoes the union bbox of the crossed strokes + the scribble. The
+// scribble defines that box's outer edge, so with the lasso's "fully inside"
+// selection it sits right on the boundary — and a slightly tighter device lasso
+// (higher-DPI screens buy less margin from integer rounding) drops it, so the
+// text erases but the scribble doesn't. Pad the rect outward by this many screen
+// px so boundary strokes are comfortably inside; the over-selection guard still
+// caps any extra collateral the wider box pulls in.
+export const LASSO_PAD_PX = 8;
+
 // Over-selection guard for the erase. The lasso (rect, fully-inside) can pull in
 // untouched strokes that sit fully within the crossed strokes' bounding box. If
 // the lasso selects more than this many strokes beyond the set we actually
-// detected as crossed (+ the scribble itself), the erase aborts instead of
-// mass-deleting. Such collateral would be undoable, but this caps the blast
-// radius of a pathological scribble (e.g. one crossing two far-apart strokes).
-export const MAX_COLLATERAL_STROKES = 3;
+// detected as crossed (+ the scribble itself), the erase cancels instead of
+// mass-deleting. The count is a loose proxy — a multi-stroke word inflates it
+// because the scribble only geometrically crosses some of its strokes — so keep
+// it generous; it's only meant to catch a runaway scribble (e.g. one bridging
+// two far-apart strokes). Collateral is undoable regardless.
+export const MAX_COLLATERAL_STROKES = 12;
 
 // SDK element type codes (from getElements / getLassoElements).
 export const ELEMENT_TYPES = {

@@ -1,5 +1,20 @@
 # Changes
 
+## v1.1.1 — 2026-06-18
+
+- **Erase now works on dense pages.** The over-selection guard was too eager — a
+  multi-stroke word reads as "collateral" because a scribble only geometrically
+  crosses some of its strokes — so a normal erase on a crowded page could cancel
+  and delete nothing. Relaxed the guard so ordinary erases go through; it still
+  cancels a genuinely run-away scribble.
+- **Cancelled erases no longer leave the scribble behind.** If an erase does
+  cancel, the scribble mark itself is removed, so the page isn't left scrawled.
+- **Cancel / landscape notices are now visible.** These messages were silently
+  dropped before (the dialog wasn't wired up correctly in the host).
+- **Fewer missed strokes on higher-resolution devices.** Padded the selection so
+  the scribble and edge strokes aren't dropped by a tighter lasso (e.g. on the
+  Manta / A5X2), which previously erased the text but left the scribble.
+
 ## v1.1.0 — 2026-06-17
 
 - **Reliable scribble detection — no more cursive false positives.** Detection

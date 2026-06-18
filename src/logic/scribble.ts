@@ -15,6 +15,7 @@ import { BUILD_TAG, dlog, LOG } from '../constants';
 import { readStrokePoints } from '../utils/geometry';
 import { classifyScribble } from './detect';
 import { eraseByScribble } from './erase';
+import { notify } from './notify';
 
 const TYPE_STROKE = 0;
 
@@ -46,7 +47,7 @@ export async function onScribblePenUp(elements: any[]): Promise<void> {
       } catch { /* assume portrait if unavailable */ }
       if (orientation === 1 || orientation === 3) {
         dlog(`${LOG} STROKE ${tag} landscape (orientation=${orientation}) — erase unsupported, skipping`);
-        alert('Scribble erase isn’t available in landscape mode yet.');
+        await notify('Scribble erase isn’t available in landscape mode yet.');
         continue;
       }
 
