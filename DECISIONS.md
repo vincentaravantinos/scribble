@@ -4,6 +4,26 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-06-19 — Delete-not-persisting on some firmware is a host bug; no plugin workaround
+
+**Decision:** Ship v1.1.1 for the devices where erase works (A5X, Nomad, …),
+document the failure on certain firmware as a known issue, and report it to Ratta
+rather than attempt a plugin-side workaround.
+
+**Why:** On some devices (Manta + at least one other), `deleteLassoElements`
+returns `success: true` but the deletion is not persisted (strokes flash out then
+return). On-device diagnostics (a dialog showing `crossed/selected/del`) proved
+selection is correct (`crossed=6 selected=7`, no over-selection), `del=ok`, yet
+nothing is removed. A test build that skipped the post-delete `setLassoBoxState(2)`
+(the "commit selection back" re-lay hypothesis) did **not** help, so it's a
+genuine no-op in the host's lasso-delete pipeline — outside the plugin's control.
+
+**Rejected:** (a) `reloadFile` after delete — could surface a real-file delete,
+but discards the page's unsaved strokes (data-loss risk). (b) File-level
+`deleteElements` fallback — loses undo and carries the documented cache hazards; a
+downgrade for everyone to chase a few firmwares. (c) Continuing to iterate blind
+on the remote device — diagnostics already isolated it to the host API.
+
 ## 2026-06-18 — Erase robustness: relax the guard, clean up on cancel, real dialogs
 
 **Decision:** Raise the over-selection guard's collateral cap (3 → 12); on cancel,

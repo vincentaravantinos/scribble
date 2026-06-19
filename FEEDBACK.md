@@ -18,6 +18,13 @@ Bug: insertElements does not preserve an element's position on re-insert.
 expected: the stroke is re-inserted at its original position.
 observed: the stroke is re-inserted shifted to a different position.
 
+Bug: deleteLassoElements reports success but does not persist the deletion on some firmwares/devices (reported on Manta and at least one other device; works on A5X and Nomad).
+1. From a plugin, lassoElements over a rect that selects one or more strokes.
+2. getLassoElements confirms a non-empty selection.
+3. deleteLassoElements — returns success: true.
+expected: the selected strokes are deleted and stay deleted.
+observed: the strokes briefly disappear, then the page re-renders them; nothing is actually removed. Independent of whether setLassoBoxState(2) is called afterward.
+
 Bug: lassoElements never returns (hangs the plugin) for some rectangles when the page is in a landscape split orientation.
 1. Rotate the device to landscape so the page shows a split half-page (getOrientation returns 1 or 3).
 2. From a plugin, call lassoElements with an integer rect in the lower region of the page coordinate space, e.g. { left: 720, top: 1620, right: 1080, bottom: 1871 } on a 1404x1872 page.
