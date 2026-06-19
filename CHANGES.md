@@ -1,6 +1,6 @@
 # Changes
 
-## v1.1.1 — 2026-06-18
+## v1.1.1 — 2026-06-19
 
 - **Erase now works on dense pages.** The over-selection guard was too eager — a
   multi-stroke word reads as "collateral" because a scribble only geometrically
@@ -14,6 +14,11 @@
 - **Fewer missed strokes on higher-resolution devices.** Padded the selection so
   the scribble and edge strokes aren't dropped by a tighter lasso (e.g. on the
   Manta / A5X2), which previously erased the text but left the scribble.
+
+  *Known issue:* on some devices/firmware the host reports the delete as
+  successful but doesn't actually persist it (strokes flash out then return).
+  This is a device-side bug we've reported to Ratta; erase works on A5X, Nomad,
+  and others. See `BACKLOG.md`.
 
 ## v1.1.0 — 2026-06-17
 

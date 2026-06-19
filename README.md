@@ -55,6 +55,10 @@ To erase, scribble in a zig-zag.
 - **Portrait only.** In landscape the Supernote shows a split half-page where the
   erase can't run reliably, so a scribble there just shows a brief notice and does
   nothing. Use the plugin in portrait orientation.
+- **Some devices/firmware don't delete.** On a few firmwares the device accepts
+  the delete (the strokes flash out) but then restores them — nothing is actually
+  erased. This is a device-side bug reported to Ratta; the plugin works on A5X,
+  Nomad, and others.
 
 ## Build from source
 
