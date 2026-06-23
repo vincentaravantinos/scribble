@@ -1,5 +1,10 @@
 # Changes
 
+## v1.1.2 — 2026-06-23
+
+- **New plugin icon** — a cleaner scribble mark (transparent background) in place
+  of the placeholder.
+
 ## v1.1.1 — 2026-06-19
 
 - **Erase now works on dense pages.** The over-selection guard was too eager — a

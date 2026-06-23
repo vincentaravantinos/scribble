@@ -9,7 +9,7 @@ export function dlog(...args: any[]): void {
 
 // Logged at each action start to confirm which build is actually live: pushing a
 // new .snplg doesn't always replace the running one. Bump per deploy.
-export const BUILD_TAG = 'v1.1.1';
+export const BUILD_TAG = 'v1.1.2';
 
 // Scribble detection: a scribble is a single CONSISTENT back-and-forth.
 // - MIN_CONCENTRATION: how aligned the stroke's segments are to one axis (0–1).
