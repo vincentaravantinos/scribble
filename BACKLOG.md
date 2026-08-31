@@ -6,9 +6,7 @@ item once the corresponding feature is implemented and confirmed.
 
 ## Open
 
-| ID     | Description                                             | Status |
-|--------|----------------------------------------------------------|--------|
-| CR-003 | Fix 1-indexed page/element indices                          | Analyzed (low impact, fast-track) |
+*(none)*
 
 ## Closed
 
@@ -17,6 +15,7 @@ item once the corresponding feature is implemented and confirmed.
 | B-001  | Erase over-selection guard removed (always delete, rely on Undo) | Fixed |
 | CR-001 | Upgrade sn-plugin-lib + declare plugin permissions (FILE:READ only, requested lazily on first erase) | Done |
 | CR-002 | lassoElements out-of-bounds requirement — already compliant, confirmed on-device, no code change | Done |
+| CR-003 | 1-indexed page/element indices — not applicable, Scribble doesn't use the affected APIs | Done |
 
 ## Faster large-area erase via modifyPageElements
 
