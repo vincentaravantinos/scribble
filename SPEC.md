@@ -95,6 +95,9 @@ revokes it themselves.
 
 ## Limits and edge cases
 
+REQ-060: Erase-by-scribble succeeds regardless of where on the page the
+scribble is drawn, including close to a page edge.
+
 - A scribble that only partially crosses a stroke still deletes that stroke
   **in full** — no partial/clipped erase.
 - Multi-stroke scribbles (pen lifted mid-gesture) are not detected; each

@@ -58,3 +58,20 @@ expected: >
   normal erase.
 last_result: { status: pass, date: 2026-08-31 }
 ```
+
+## Erase near a page edge
+
+```yaml
+id: TC-004
+title: Erase-by-scribble succeeds when the scribble is drawn near a page edge
+traces_to: [REQ-060]
+steps:
+  - Write a stroke close to one edge of the page (e.g. within a
+    fingerwidth of the top or a side margin).
+  - Scribble back and forth over it, close enough to the edge that the
+    scribble itself nearly touches it, to trigger an erase.
+expected: >
+  The scribbled-over stroke and the scribble itself are deleted, same as
+  an erase away from the edge.
+last_result: { status: pass, date: 2026-08-31 }
+```

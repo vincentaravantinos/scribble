@@ -8,7 +8,6 @@ item once the corresponding feature is implemented and confirmed.
 
 | ID     | Description                                             | Status |
 |--------|----------------------------------------------------------|--------|
-| CR-002 | Fix lassoElements out-of-bounds failure                    | Analyzed (low impact, fast-track) |
 | CR-003 | Fix 1-indexed page/element indices                          | Analyzed (low impact, fast-track) |
 
 ## Closed
@@ -17,6 +16,7 @@ item once the corresponding feature is implemented and confirmed.
 |--------|-------------|--------|
 | B-001  | Erase over-selection guard removed (always delete, rely on Undo) | Fixed |
 | CR-001 | Upgrade sn-plugin-lib + declare plugin permissions (FILE:READ only, requested lazily on first erase) | Done |
+| CR-002 | lassoElements out-of-bounds requirement — already compliant, confirmed on-device, no code change | Done |
 
 ## Faster large-area erase via modifyPageElements
 
