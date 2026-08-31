@@ -36,6 +36,11 @@ export const REVERSAL_DEADBAND_FRAC = 0.1;
 // px so boundary strokes are comfortably inside.
 export const LASSO_PAD_PX = 8;
 
+// Gates PluginFileAPI.getElements/getPageSize (direct file reads, even on the
+// currently-open file). The lasso-delete pipeline (PluginCommAPI) needs no
+// permission of its own — see SDK_DOC.md.
+export const PERM_FILE_READ = 'plugin.permission.FILE:READ';
+
 // SDK element type codes (from getElements / getLassoElements).
 export const ELEMENT_TYPES = {
   STROKE: 0,

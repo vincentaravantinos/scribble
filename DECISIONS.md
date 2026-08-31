@@ -4,6 +4,32 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-08-31 — Request FILE:READ lazily, on first erase; declare only FILE:READ (CR-001)
+
+**Decision:** On the new plugin permission system (Chauvet 3.29.43/2.26.40),
+declare only `plugin.permission.FILE:READ` in `PluginConfig.json`, and
+request it (`hasPermission`/`requestPermission`) the first time the user
+actually scribbles to erase — not at plugin init/launch. On denial, abort
+before any read and show an explanatory message; nothing gets deleted.
+
+**Why:** A spike (on-device, not just docs) established that
+`PluginFileAPI.getElements`/`getPageSize` require `FILE:READ` even for the
+currently-open file (error 1503 without it), while the delete itself —
+`PluginCommAPI.lassoElements`/`deleteLassoElements` — needed no permission
+at all once `FILE:READ` was granted; removing `FILE:WRITE`/`FILE:DELETE`
+from the manifest entirely still left erase working end to end. Declaring
+only what's actually used follows least-privilege and avoids an unnecessary
+second/third permission dialog. Requesting lazily (first use, not upfront)
+matches the plugin's existing "just scribble, no setup step" design (see
+SPEC.md Overview) — a user who never triggers an erase is never interrupted.
+
+**Rejected:** (a) Declaring `FILE:WRITE`/`FILE:DELETE` defensively, matching
+other plugins (e.g. Clipper) — those plugins do actual `PluginFileAPI`
+writes (image-clip inserts, ToC refresh); Scribble doesn't, so it would
+just be an unused, unexplained permission prompt. (b) Requesting permission
+eagerly at plugin init — adds a dialog before the user has done anything,
+for a feature (erase) they may not use in that session.
+
 ## 2026-07-11 — Remove the over-selection guard entirely (B-001)
 
 **Decision:** Delete the over-selection guard (introduced 2026-06-15, tuned

@@ -12,8 +12,9 @@
  */
 
 import { PluginCommAPI, PluginFileAPI, PluginManager } from 'sn-plugin-lib';
-import { dlog, LASSO_PAD_PX, LOG } from '../constants';
+import { dlog, LASSO_PAD_PX, LOG, PERM_FILE_READ } from '../constants';
 import { acquireBusy, releaseBusy } from './busy';
+import { notify } from './notify';
 import {
   Bbox,
   bboxesOverlap,
@@ -68,6 +69,34 @@ export async function eraseByScribble(
     const scribbleBox = bboxOf(scribblePts);
     if (!scribbleBox) {
       dlog(`${LOG} erase: scribble has no bbox`);
+      return;
+    }
+
+    // Requested lazily, on the first actual erase, rather than upfront at
+    // install/launch — matches the "just scribble" flow (SPEC.md), no setup
+    // step before the feature is ever used. Despite deleting content, this
+    // only needs FILE:READ: the delete itself goes through the Comm API
+    // lasso pipeline below, not a direct PluginFileAPI write (see
+    // PERM_FILE_READ's comment in constants.ts).
+    let readGranted = false;
+    try {
+      const hasRes = await PluginManager.hasPermission(PERM_FILE_READ);
+      readGranted = hasRes === 1;
+      if (!readGranted) {
+        const reqRes = await PluginManager.requestPermission(
+          PERM_FILE_READ,
+          'Scribble needs to read the page to find strokes to erase.',
+        );
+        readGranted = reqRes === 1 || reqRes === 2;
+      }
+    } catch (e) {
+      dlog(`${LOG} erase: FILE:READ permission check/request threw: ${e}`);
+    }
+    if (!readGranted) {
+      dlog(`${LOG} erase: FILE:READ not granted — aborting`);
+      await notify(
+        'Scribble needs permission to read the page to erase. Grant it in Settings → Apps → Plugins → Scribble → Permissions.',
+      );
       return;
     }
 

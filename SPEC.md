@@ -73,6 +73,26 @@ are **not**. Scribble therefore deletes via the lasso pipeline. (This also
 explains the SPEC's earlier puzzle: shape-snap's lasso path is undoable;
 collapse-expand's file-level path is not.)
 
+## Permissions
+
+REQ-010: When the user scribbles to erase and the plugin does not currently
+have permission to read the page, the host's standard permission dialog is
+shown, asking the user to allow or deny.
+
+REQ-020: If the user grants the permission (for this session or always), the
+erase proceeds normally, with the same outcome described in "Erase-by-scribble".
+
+REQ-030: If the user denies the permission, the scribble and the strokes it
+crosses are **not** deleted.
+
+REQ-040: If the user denies the permission, the user is shown a message
+explaining that Scribble needs permission to read the page in order to
+erase, and where to grant it.
+
+REQ-050: Once the user has granted the permission "always", subsequent
+scribbles do not show the permission dialog again, unless the user later
+revokes it themselves.
+
 ## Limits and edge cases
 
 - A scribble that only partially crosses a stroke still deletes that stroke

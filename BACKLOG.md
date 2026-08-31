@@ -4,6 +4,29 @@ Open feature requests and deferred items. Worked per the workflows in
 `AGENT.md` (features → architect-challenge then implementation). Remove an
 item once the corresponding feature is implemented and confirmed.
 
+## Open
+
+| ID     | Description                                             | Status |
+|--------|----------------------------------------------------------|--------|
+| CR-002 | Fix lassoElements out-of-bounds failure                    | Analyzed (low impact, fast-track) |
+| CR-003 | Fix 1-indexed page/element indices                          | Analyzed (low impact, fast-track) |
+
+## Closed
+
+| ID     | Description | Status |
+|--------|-------------|--------|
+| B-001  | Erase over-selection guard removed (always delete, rely on Undo) | Fixed |
+| CR-001 | Upgrade sn-plugin-lib + declare plugin permissions (FILE:READ only, requested lazily on first erase) | Done |
+
+## Faster large-area erase via modifyPageElements
+
+Idea (from r/Supernote_dev, u/dimmir, on the Chauvet 3.29.43 SDK release
+thread): the new `PluginCommAPI.modifyPageElements`/`batchUpdatePageElements`
+APIs might let erase avoid the current per-element delete pipeline and speed
+up large-area scribbles, which today take noticeably longer than small ones.
+Not scoped or committed to — worth investigating as a future CR, not part of
+the SDK-compatibility work (CR-001/002/003).
+
 ## Delete not persisting on some firmware (blocked on Ratta)
 
 On some devices/firmware (reported on Manta + one other), `deleteLassoElements`

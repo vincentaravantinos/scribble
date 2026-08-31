@@ -7,5 +7,6 @@
   "pluginID": "com.supernote.plugin.scribble",
   "pluginKey": "Scribble",
   "jsMainPath": "index",
-  "supportTypes": ["NOTE"]
+  "supportTypes": ["NOTE"],
+  "uses-permissions": ["plugin.permission.FILE:READ"]
 }

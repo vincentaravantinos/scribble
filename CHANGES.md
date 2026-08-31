@@ -1,5 +1,15 @@
 # Changes
 
+## Unreleased
+
+- **Updated for the new Supernote plugin permission system** (firmware
+  Chauvet 3.29.43 / 2.26.40 and later). The first time you scribble to
+  erase, you'll be asked to allow Scribble to read the page — this is
+  needed to find the strokes to erase. Allow it once ("Always allow") and
+  you won't be asked again. If you decline, that erase won't happen and
+  Scribble will tell you where to grant the permission if you change your
+  mind.
+
 ## v1.1.3 — 2026-07-12
 
 - **Erase no longer cancels.** The over-selection guard is removed: a scribble
