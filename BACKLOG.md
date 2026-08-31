@@ -16,15 +16,7 @@ item once the corresponding feature is implemented and confirmed.
 | CR-001 | Upgrade sn-plugin-lib + declare plugin permissions (FILE:READ only, requested lazily on first erase) | Done |
 | CR-002 | lassoElements out-of-bounds requirement — already compliant, confirmed on-device, no code change | Done |
 | CR-003 | 1-indexed page/element indices — not applicable, Scribble doesn't use the affected APIs | Done |
-
-## Faster large-area erase via modifyPageElements
-
-Idea (from r/Supernote_dev, u/dimmir, on the Chauvet 3.29.43 SDK release
-thread): the new `PluginCommAPI.modifyPageElements`/`batchUpdatePageElements`
-APIs might let erase avoid the current per-element delete pipeline and speed
-up large-area scribbles, which today take noticeably longer than small ones.
-Not scoped or committed to — worth investigating as a future CR, not part of
-the SDK-compatibility work (CR-001/002/003).
+| CR-004 | Faster large-area erase via modifyPageElements — rejected, premise doesn't hold (delete step already batched; real cost is the read/crossing-scan step, untouched by this SDK release) | Rejected |
 
 ## Delete not persisting on some firmware (blocked on Ratta)
 
