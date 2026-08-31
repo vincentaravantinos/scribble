@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## v1.2.0 — 2026-08-31
 
 - **Updated for the new Supernote plugin permission system** (firmware
   Chauvet 3.29.43 / 2.26.40 and later). The first time you scribble to
@@ -9,6 +9,11 @@
   you won't be asked again. If you decline, that erase won't happen and
   Scribble will tell you where to grant the permission if you change your
   mind.
+- **No speed improvement in this release.** A few of you asked whether the
+  new SDK APIs in this firmware could speed up erasing large areas — they
+  can't. The slow part is reading and scanning the page, not the delete
+  itself, and this SDK release doesn't touch that. Large-area erase speed
+  is still on the list, just not solved here.
 
 ## v1.1.3 — 2026-07-12
 

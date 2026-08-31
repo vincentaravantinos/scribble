@@ -21,6 +21,10 @@ scribble itself. No lasso, no button; it reacts to the gesture.
   scribble both vanish.
 - **Undo:** changed your mind? Tap the device **Undo** button — everything comes
   back.
+- **First erase asks for permission.** The first time you scribble to erase,
+  Supernote will ask for permission to let Scribble read the page — required
+  by the plugin system to find what you're erasing. Allow it once ("Always
+  allow") and you won't be asked again.
 
 That's the whole plugin. There's nothing to open or configure.
 
