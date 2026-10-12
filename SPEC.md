@@ -30,6 +30,16 @@ drawing gesture itself.
   cluster) but grows when the scribble crosses a long stroke or two far-apart
   strokes. It is always recoverable via Undo. See "Limits and edge cases".
 
+REQ-100: When the user scribbles back and forth over existing handwriting and
+lifts the pen, the scribble itself disappears from the page.
+
+REQ-110: When the user scribbles back and forth over existing handwriting and
+lifts the pen, every stroke the scribble crosses disappears from the page.
+
+REQ-120: When the user scribbles to erase, strokes lying entirely outside the
+smallest rectangle enclosing the scribble and the strokes it crosses remain on
+the page.
+
 ### Scribble detection
 A scribble is a single **consistent back-and-forth**: its segments all point along
 one axis, and it reverses along that axis several times. Concretely (calibrated
@@ -50,6 +60,16 @@ and area, principal-axis orientation). What separates them is that a scribble go
 many. On a labeled corpus this was clean: scribbles measured consistency 0.96–0.98,
 words ≤ 0.77 — a wide margin, and orientation-agnostic (a scribble at any angle
 qualifies). A regression test (`__tests__/`) pins this against the captured corpus.
+
+REQ-200: Writing ordinary handwritten words, including cursive, does not erase
+anything.
+
+REQ-210: Drawing a single straight line, in any direction, does not erase
+anything.
+
+REQ-220: A back-and-forth scribble drawn vertically over handwriting erases it.
+
+REQ-230: A back-and-forth scribble drawn diagonally over handwriting erases it.
 
 Single continuous stroke only (one pen-down-to-up). Classification is cheap and
 computed from the stroke's own points (two bridge calls to read them) — no SDK
@@ -72,6 +92,9 @@ through the **lasso / interactive pipeline** (`lassoElements` →
 are **not**. Scribble therefore deletes via the lasso pipeline. (This also
 explains the SPEC's earlier puzzle: shape-snap's lasso path is undoable;
 collapse-expand's file-level path is not.)
+
+REQ-150: After a scribble-erase, the device's Undo restores every stroke the
+erase removed.
 
 ## Permissions
 

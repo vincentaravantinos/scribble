@@ -6,13 +6,16 @@ item once the corresponding feature is implemented and confirmed.
 
 ## Open
 
-*(none)*
+| ID     | Description | Status |
+|--------|-------------|--------|
+| CR-005 | Adopt sn-plugin-lib 0.2.x unified Android-pixel coordinates — blocked on Ratta (PEN_UP points still EMR, see B-002) | Blocked |
 
 ## Closed
 
 | ID     | Description | Status |
 |--------|-------------|--------|
 | B-001  | Erase over-selection guard removed (always delete, rely on Undo) | Fixed |
+| B-002  | Erase broken on sn-plugin-lib 0.2.3 (PEN_UP EMR vs getElements px) — reverted to 0.1.65 | Fixed |
 | CR-001 | Upgrade sn-plugin-lib + declare plugin permissions (FILE:READ only, requested lazily on first erase) | Done |
 | CR-002 | lassoElements out-of-bounds requirement — already compliant, confirmed on-device, no code change | Done |
 | CR-003 | 1-indexed page/element indices — not applicable, Scribble doesn't use the affected APIs | Done |

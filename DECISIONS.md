@@ -4,6 +4,25 @@ A log of significant, non-obvious design choices and the alternatives that were
 rejected. This is the *why* behind the architecture — distinct from CHANGES.md
 (*what* changed) and SDK_DOC.md (*what the SDK does*).
 
+## 2026-10-12 — Stay on sn-plugin-lib 0.1.65; don't adopt 0.2.x coordinates yet (B-002, CR-005)
+
+**Decision:** Keep Scribble on `sn-plugin-lib` 0.1.65 (EMR coordinates) on
+Chauvet 3.30.45/2.27.42, rather than upgrading to 0.2.3's unified Android
+pixel coordinates.
+
+**Why:** On 2.27.42 with 0.2.3, the PEN_UP payload still delivers EMR points
+while `getElements` returns px. Classification and the crossing test compare
+the just-drawn stroke with page strokes, so mixed frames break erase entirely.
+Ratta guarantees ≤0.1.65 plugins keep working. Reported to Ratta.
+
+**Rejected:** Converting PEN_UP points to px ourselves via the deprecated
+`maxX`/`maxY`. It breaks silently the day Ratta fixes the payload, because
+nothing reliably says which frame we're getting.
+
+**For the retry:** the EMR/px ratio is device-dependent (A5X 11.2 — EMR max
+20967×15725 on a 1404×1872 page — vs Manta 8.45). A px diagonal cap must be
+relative to the page size, not a fixed number.
+
 ## 2026-08-31 — Request FILE:READ lazily, on first erase; declare only FILE:READ (CR-001)
 
 **Decision:** On the new plugin permission system (Chauvet 3.29.43/2.26.40),

@@ -75,3 +75,105 @@ expected: >
   an erase away from the edge.
 last_result: { status: pass, date: 2026-08-31 }
 ```
+
+## Scribble erases the word and itself
+
+```yaml
+id: TC-005
+title: Scribbling over a word erases the word and the scribble
+traces_to: [REQ-100, REQ-110]
+steps:
+  - In portrait, write a word on a note page.
+  - Scribble horizontally back and forth over the word and lift the pen.
+expected: >
+  The word and the scribble both disappear from the page.
+last_result: { status: pass, date: 2026-10-12 }
+```
+
+## Content outside the erase area stays
+
+```yaml
+id: TC-006
+title: A word clearly apart from the scribbled one is not erased
+traces_to: [REQ-120]
+steps:
+  - In portrait, write two words on one line with a gap of at least one
+    word's width between them.
+  - Scribble back and forth over the first word only and lift the pen.
+expected: >
+  The first word and the scribble disappear; the second word remains on
+  the page unchanged.
+last_result: { status: pass, date: 2026-10-12 }
+```
+
+## Undo restores an erase
+
+```yaml
+id: TC-007
+title: Undo brings back the strokes a scribble erased
+traces_to: [REQ-150]
+steps:
+  - In portrait, write a word and scribble over it so it is erased.
+  - Tap the device's Undo button.
+expected: >
+  The erased word reappears on the page.
+last_result: { status: pass, date: 2026-10-12 }
+```
+
+## Handwriting is not mistaken for a scribble
+
+```yaml
+id: TC-008
+title: Writing ordinary words, including cursive, erases nothing
+traces_to: [REQ-200]
+steps:
+  - In portrait, write a line of printed words.
+  - Below it, write a line of cursive words including "minimum" and "www".
+expected: >
+  Every stroke written stays on the page; nothing disappears.
+last_result: { status: pending }
+```
+
+## A straight line is not a scribble
+
+```yaml
+id: TC-009
+title: Drawing a straight line over a word erases nothing
+traces_to: [REQ-210]
+steps:
+  - In portrait, write a word.
+  - Draw a single straight line through the word in one stroke and lift
+    the pen.
+expected: >
+  The word and the line both stay on the page.
+last_result: { status: pending }
+```
+
+## Vertical scribble
+
+```yaml
+id: TC-010
+title: A vertical scribble over a word erases it
+traces_to: [REQ-220]
+steps:
+  - In portrait, write a word.
+  - Scribble up and down (vertically) over the word and lift the pen.
+expected: >
+  The word and the scribble both disappear from the page.
+last_result: { status: pending }
+```
+
+## Diagonal scribble
+
+```yaml
+id: TC-011
+title: A diagonal scribble over a word erases it
+traces_to: [REQ-230]
+steps:
+  - In portrait, write a word.
+  - Scribble back and forth diagonally (roughly 45°) over the word and
+    lift the pen.
+expected: >
+  The word and the scribble both disappear from the page.
+last_result: { status: pending }
+```
